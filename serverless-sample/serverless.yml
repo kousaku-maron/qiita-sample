@@ -1,0 +1,50 @@
+service:
+  name: serverless-sample
+
+# Add the serverless-webpack plugin
+plugins:
+  - serverless-webpack
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  timeout: 60
+  environment: 
+    DYNAMODB_TABLE: qiitaTable
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      # Resource: arn:aws:dynamodb:${opt:stage, self:provider.stage}:*:table/${self:provider.environment.DYNAMODB_TABLE}
+      Resource: arn:aws:dynamodb:us-east-1:*:table/qiitaTable
+
+
+functions:
+  qiita:
+    handler: qiita.hello
+    events:
+      - schedule: cron(0 * * * ? *)
+    environment:
+      endpoint: https://qiita.com/api/v2/users/kousaku-maron/items
+      tableName: ${self:provider.environment.DYNAMODB_TABLE}
+
+resources:
+  Resources:
+    qiitaTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.DYNAMODB_TABLE}
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1

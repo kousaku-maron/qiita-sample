@@ -1,7 +1,10 @@
 import axios from 'axios'
 import AWS from 'aws-sdk'
 
-const documentClient = new AWS.DynamoDB.DocumentClient()
+const documentClient = new AWS.DynamoDB.DocumentClient({
+  region: 'localhost',
+  endpoint: 'http://localhost:8000'
+})
 
 export const hello = async (event, context, callback) => {
   const res = await axios({
